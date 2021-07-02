@@ -3,9 +3,24 @@ import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@apollo/client';
 
 import { useStoreContext } from "../utils/GlobalState";
-import { UPDATE_PRODUCTS } from "../utils/actions";
+
+import {
+  REMOVE_FROM_CART,
+  UPDATE_CART_QUANTITY,
+  ADD_TO_CART,
+  UPDATE_PRODUCTS,
+} from '../utils/actions';
+
 import { QUERY_PRODUCTS } from '../utils/queries';
 import spinner from '../assets/spinner.gif';
+import Cart from '../components/Cart';
+
+const addToCart = () => {
+  dispatch({
+    type: ADD_TO_CART,
+    product: { ...currentProduct, purchaseQuantity: 1 }
+  });
+};
 
 function Detail() {
   const [state, dispatch] = useStoreContext();
@@ -15,7 +30,7 @@ function Detail() {
 
   const { loading, data } = useQuery(QUERY_PRODUCTS);
 
-  const { products } = state;
+  const { products, cart } = state;
 
   useEffect(() => {
     if (products.length) {
@@ -28,6 +43,13 @@ function Detail() {
     }
   }, [products, data, dispatch, id]);
 
+  const removeFromCart = () => {
+    dispatch({
+      type: REMOVE_FROM_CART,
+      _id: currentProduct._id
+    });
+  };
+  
   return (
     <>
       {currentProduct ? (
@@ -40,8 +62,13 @@ function Detail() {
 
           <p>
             <strong>Price:</strong>${currentProduct.price}{' '}
-            <button>Add to Cart</button>
-            <button>Remove from Cart</button>
+            <button onCLick={addToCart}>Add to Cart</button>
+            <button
+              disabled={!cart.find(p => p._id === currentProduct._id)}
+              onCLick={removeFromCart}
+            >
+              Remove from Cart
+            </button>
           </p>
 
           <img
@@ -51,6 +78,7 @@ function Detail() {
         </div>
       ) : null}
       {loading ? <img src={spinner} alt="loading" /> : null}
+      <Cart />
     </>
   );
 }
